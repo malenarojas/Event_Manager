@@ -227,12 +227,4 @@ curl "http://localhost:3000/events/availability/1?start=2024-01-15T10:00:00Z&end
 5. Ensure all tests pass
 6. Submit a pull request
 
-## License / Licencia
 
-This project is licensed under the MIT License.
-
----
-
-**Author / Autor**: Event Manager Team  
-**Version**: 1.0.0  
-**Last Updated**: January 2024
