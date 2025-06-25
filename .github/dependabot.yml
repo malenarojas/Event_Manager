@@ -5,16 +5,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "your-username"
-    assignees:
-      - "your-username"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
     labels:
       - "dependencies"
       - "npm"
@@ -30,16 +21,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "your-username"
-    assignees:
-      - "your-username"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
     labels:
       - "dependencies"
       - "github-actions"
@@ -50,13 +32,6 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 5
-    reviewers:
-      - "your-username"
-    assignees:
-      - "your-username"
-    commit-message:
-      prefix: "security"
-      include: "scope"
     labels:
       - "security"
       - "dependencies"
