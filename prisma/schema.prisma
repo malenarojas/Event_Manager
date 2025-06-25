@@ -1,0 +1,29 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+   previewFeatures = ["interactiveTransactions"]
+}
+
+model Room {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  events  Event[]
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  startTime DateTime
+  endTime   DateTime
+  roomId    Int
+  room      Room     @relation(fields: [roomId], references: [id])
+  @@index([roomId, startTime, endTime])
+}
+
+"prisma": {
+  "seed": "ts-node prisma/seed.ts"
+}
