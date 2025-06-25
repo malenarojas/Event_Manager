@@ -124,6 +124,7 @@ describe('EventsService', () => {
         roomId: 1,
         startTime: new Date('2024-01-01T11:00:00Z'),
         endTime: new Date('2024-01-01T13:00:00Z'),
+        room: mockRoom,
       };
 
       mockPrismaService.event.findUnique.mockResolvedValue(null);

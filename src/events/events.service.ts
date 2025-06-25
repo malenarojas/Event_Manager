@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { validateEventCreation, validateEventUpdate } from './events.utils';
 
 @Injectable()
 export class EventsService {
@@ -13,23 +14,7 @@ export class EventsService {
     const start = new Date(startTime);
     const end = new Date(endTime);
 
-    if (start >= end) {
-      throw new BadRequestException('Start time must be before end time.');
-    }
-    const existingEvent = await this.prisma.event.findUnique({
-      where: { name },
-    });
-
-    if (existingEvent) {
-      throw new BadRequestException('An event with this name already exists.');
-    }
-    const room = await this.prisma.room.findUnique({
-      where: { id: roomId },
-    });
-
-    if (!room) {
-      throw new NotFoundException('Room not found.');
-    }
+    await validateEventCreation(this.prisma, name, start, end, roomId);
 
     try {
       // Check for overlapping events in the same room
@@ -44,11 +29,14 @@ export class EventsService {
             { endTime: { gt: start } }, 
           ],
         },
+        include: {
+          room: true,
+        },
       });
 
       if (overlapping) {
         throw new BadRequestException(
-          `Event overlaps with existing event "${overlapping.name}" in room "${room.name}". ` +
+          `Event overlaps with existing event "${overlapping.name}" in room "${overlapping.room.name}". ` +
           `Conflicting time: ${overlapping.startTime.toISOString()} - ${overlapping.endTime.toISOString()}`
         );
       }
@@ -71,7 +59,7 @@ export class EventsService {
         message: 'Event created successfully',
       };
     } catch (err) {
-      console.error('❌ Error creating event:', err);
+      console.error('Error creating event:', err);
 
       if (err instanceof BadRequestException || err instanceof NotFoundException) {
         throw err;
@@ -97,37 +85,9 @@ export class EventsService {
   }
 
   async update(id: number, dto: UpdateEventDto) {
-    // Check if event exists
-    const existingEvent = await this.prisma.event.findUnique({
-      where: { id },
-      include: { room: true },
-    });
-
-    if (!existingEvent) {
-      throw new NotFoundException('Event not found.');
-    }
-    // Validate input data if provided
-    if (dto.startTime && dto.endTime) {
-      const start = new Date(dto.startTime);
-      const end = new Date(dto.endTime);
-
-      if (start >= end) {
-        throw new BadRequestException('Start time must be before end time.');
-      }
-    }
-
-    // Check for name conflicts if name is being updated
-    if (dto.name && dto.name !== existingEvent.name) {
-      const nameConflict = await this.prisma.event.findUnique({
-        where: { name: dto.name },
-      });
-
-      if (nameConflict) {
-        throw new BadRequestException('An event with this name already exists.');
-      }
-    }
-
-    // Check for overlapping events if time is being updated
+    const existingEvent = await validateEventUpdate(this.prisma, id, dto);
+    
+    // Check for overlapping events if time is being updated (keep this in service)
     if (dto.startTime || dto.endTime) {
       const start = dto.startTime ? new Date(dto.startTime) : existingEvent.startTime;
       const end = dto.endTime ? new Date(dto.endTime) : existingEvent.endTime;
@@ -141,11 +101,14 @@ export class EventsService {
             { endTime: { gt: start } },
           ],
         },
+        include: {
+          room: true,
+        },
       });
 
       if (overlapping) {
         throw new BadRequestException(
-          `Event overlaps with existing event "${overlapping.name}" in room "${existingEvent.room.name}". ` +
+          `Event overlaps with existing event "${overlapping.name}" in room "${overlapping.room.name}". ` +
           `Conflicting time: ${overlapping.startTime.toISOString()} - ${overlapping.endTime.toISOString()}`
         );
       }
