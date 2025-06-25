@@ -13,12 +13,9 @@ export class EventsService {
     const start = new Date(startTime);
     const end = new Date(endTime);
 
-    // Check if start time is before end time
     if (start >= end) {
       throw new BadRequestException('Start time must be before end time.');
     }
-
-    // Check if event name already exists
     const existingEvent = await this.prisma.event.findUnique({
       where: { name },
     });
@@ -26,8 +23,6 @@ export class EventsService {
     if (existingEvent) {
       throw new BadRequestException('An event with this name already exists.');
     }
-
-    // Check if room exists
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
     });
@@ -45,8 +40,8 @@ export class EventsService {
         where: {
           roomId,
           AND: [
-            { startTime: { lt: end } }, // Existing event starts before new event ends
-            { endTime: { gt: start } }, // Existing event ends after new event starts
+            { startTime: { lt: end } }, 
+            { endTime: { gt: start } }, 
           ],
         },
       });
@@ -79,7 +74,7 @@ export class EventsService {
       console.error('❌ Error creating event:', err);
 
       if (err instanceof BadRequestException || err instanceof NotFoundException) {
-        throw err; // Re-throw handled exceptions
+        throw err;
       }
 
       throw new BadRequestException('An unexpected error occurred while creating the event.');
@@ -111,7 +106,6 @@ export class EventsService {
     if (!existingEvent) {
       throw new NotFoundException('Event not found.');
     }
-
     // Validate input data if provided
     if (dto.startTime && dto.endTime) {
       const start = new Date(dto.startTime);
@@ -197,8 +191,8 @@ export class EventsService {
     return await this.prisma.event.findMany({
       where: {
         AND: [
-          { startTime: { lt: endDate } }, // Event starts before range ends
-          { endTime: { gt: startDate } }, // Event ends after range starts
+          { startTime: { lt: endDate } }, 
+          { endTime: { gt: startDate } }, 
         ],
       },
       include: {
@@ -211,7 +205,6 @@ export class EventsService {
     });
   }
 
-  // Get events by room
   async findByRoom(roomId: number) {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },

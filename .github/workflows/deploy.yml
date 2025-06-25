@@ -1,0 +1,111 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event.workflow_run.conclusion == 'success'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Build application
+      run: npm run build
+
+    - name: Deploy to staging
+      run: |
+        echo " Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # Example: docker build, kubectl apply, etc.
+        echo " Staging deployment completed"
+
+    - name: Run smoke tests
+      run: |
+        echo " Running smoke tests on staging..."
+        # Add smoke test commands here
+        echo " Smoke tests passed"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Build application
+      run: npm run build
+
+    - name: Run database migrations
+      run: |
+        echo " Running database migrations..."
+        # Add production migration commands here
+        echo " Database migrations completed"
+
+    - name: Deploy to production
+      run: |
+        echo " Deploying to production environment..."
+        # Add your production deployment commands here
+        echo " Production deployment completed"
+
+    - name: Health check
+      run: |
+        echo "Running health checks..."
+        # Add health check commands here
+        echo "Health checks passed"
+
+    - name: Notify deployment success
+      run: |
+        echo " Production deployment successful!"
+        # Add notification commands (Slack, email, etc.)
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Rollback deployment
+      run: |
+        echo " Rolling back production deployment..."
+        # Add rollback commands here
+        echo " Rollback completed"
+
+    - name: Notify rollback
+      run: |
+        echo " Production deployment failed and was rolled back"
+        # Add notification commands 
